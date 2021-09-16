@@ -1,0 +1,5 @@
+rootProject.name = 'certificates'
+include 'restapp'
+include 'service'
+include 'dao'
+
