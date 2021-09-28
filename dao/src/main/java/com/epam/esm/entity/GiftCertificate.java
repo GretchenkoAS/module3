@@ -3,6 +3,7 @@ package com.epam.esm.entity;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -38,12 +39,12 @@ public class GiftCertificate {
     @Column
     private Integer duration;
 
-    @Column
+    @Column(name = "create_date")
     private LocalDateTime createDate;
 
-    @Column
+    @Column(name = "last_update_date")
     private LocalDateTime lastUpdateDate;
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH}, fetch = FetchType.EAGER)
     @JoinTable(
             name = "tags_gift_certificates",
             joinColumns = @JoinColumn(name = "gift_certificate_id", referencedColumnName = "id"),
@@ -56,14 +57,12 @@ public class GiftCertificate {
 
     @PrePersist
     public void prePersist() {
-
         this.createDate = LocalDateTime.now();
         this.lastUpdateDate = LocalDateTime.now();
     }
 
     @PreUpdate
     public void preUpdate() {
-
         this.lastUpdateDate = LocalDateTime.now();
     }
 

@@ -30,14 +30,6 @@ public interface GiftCertificateDao {
     Optional<GiftCertificate> findOne(Long id);
 
     /**
-     * Returns Optional of GiftCertificate with provided name from repository.
-     *
-     * @param name name of GiftCertificate to find
-     * @return Optional<GiftCertificate> of GiftCertificate with provided name in repository
-     */
-    Optional<GiftCertificate> findByName(String name);
-
-    /**
      * Adds GiftCertificate to repository.
      *
      * @param obj GiftCertificate to add to repository
@@ -48,11 +40,9 @@ public interface GiftCertificateDao {
     /**
      * Updates GiftCertificate with provided id in repository.
      *
-     * @param obj of GiftCertificate to update
-     * @param id  of GiftCertificate to update
      * @return GiftCertificate of updated entity in repository
      */
-    GiftCertificate update(GiftCertificate obj, Long id);
+    GiftCertificate update(GiftCertificate obj);
 
     /**
      * Removes GiftCertificate with provided id from repository.
@@ -69,20 +59,7 @@ public interface GiftCertificateDao {
      */
     Set<Tag> getTags(Long giftCertificateId);
 
-    /**
-     * Adds a tag to the certificate.
-     *
-     * @param tagId             id of tag
-     * @param giftCertificateId id of gift certificate
-     */
-    void addTag(Long tagId, Long giftCertificateId);
-
-    /**
-     * Removes tags from the certificate.
-     *
-     * @param id id of gift certificate
-     */
-    void clearTags(Long id);
+    void detach(GiftCertificate giftCertificate);
 
     /**
      * Retrieves gift certificates from repository according to provided query.

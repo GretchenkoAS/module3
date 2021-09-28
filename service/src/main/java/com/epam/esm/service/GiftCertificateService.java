@@ -39,15 +39,6 @@ public interface GiftCertificateService {
     List<GiftCertificateDto> findAll();
 
     /**
-     * Returns GiftCertificateDto object for gift certificate with provided name from repository.
-     *
-     * @param name name of tag to find
-     * @return GiftCertificateDto object of gift certificate with provided name in repository
-     * @throws AppException if tag with provided name is not present in repository
-     */
-    GiftCertificateDto findByName(String name);
-
-    /**
      * Removes gift certificate with provided id from repository.
      *
      * @param id id of gift certificate to remove

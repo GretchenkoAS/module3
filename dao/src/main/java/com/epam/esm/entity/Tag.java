@@ -1,14 +1,11 @@
 package com.epam.esm.entity;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import java.util.Set;
 
 @Table(name = "tags")
 @Entity
@@ -23,24 +20,11 @@ public class Tag {
     @Column(name = "is_blocked")
     private boolean isBlocked;
 
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST}, mappedBy = "tags")
-    private Set<GiftCertificate> certificates;
-
     public Tag(String name) {
         this.name = name;
     }
 
     public Tag() {
-    }
-
-    public Set<GiftCertificate> getCertificates() {
-
-        return certificates;
-    }
-
-    public void setCertificates(Set<GiftCertificate> certificates) {
-
-        this.certificates = certificates;
     }
 
     public Long getId() {

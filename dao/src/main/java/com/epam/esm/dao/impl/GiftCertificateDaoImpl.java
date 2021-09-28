@@ -8,12 +8,11 @@ import com.epam.esm.entity.Query;
 import com.epam.esm.entity.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +24,11 @@ import static java.time.LocalDateTime.now;
 
 @Repository
 public class GiftCertificateDaoImpl implements GiftCertificateDao {
-    private static final String SELECT_ALL_GIFT_CERTIFICATES = "SELECT * FROM gift_certificates";
+    private static final String SELECT_ALL_GIFT_CERTIFICATES = "SELECT c FROM GiftCertificate c";
+    private static final String SELECT_ONE_TAG_BY_NAME = "SELECT t FROM Tag t WHERE t.name=:name";
+    private static final String NAME = "name";
+
+
     private static final String SELECT_ONE_GIFT_CERTIFICATE = "SELECT * FROM gift_certificates WHERE id=?";
     private static final String SELECT_ONE_GIFT_CERTIFICATE_BY_NAME = "SELECT * FROM gift_certificates WHERE name=?";
     private static final String ADD_GIFT_CERTIFICATE = "INSERT INTO gift_certificates (name, description," +
@@ -39,6 +42,8 @@ public class GiftCertificateDaoImpl implements GiftCertificateDao {
     private final JdbcTemplate jdbcTemplate;
     private final GiftCertificateRowMapper giftCertificateRowMapper;
     private final TagRowMapper tagRowMapper;
+    private EntityManager entityManager;
+
 
     @Autowired
     public GiftCertificateDaoImpl(JdbcTemplate jdbcTemplate, GiftCertificateRowMapper giftCertificateRowMapper, TagRowMapper tagRowMapper) {
@@ -47,38 +52,26 @@ public class GiftCertificateDaoImpl implements GiftCertificateDao {
         this.tagRowMapper = tagRowMapper;
     }
 
+    @PersistenceContext
+    public void setEm(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+
     @Override
     public List<GiftCertificate> findAll() {
-        return jdbcTemplate.query(SELECT_ALL_GIFT_CERTIFICATES, giftCertificateRowMapper);
+        return new ArrayList<>(entityManager.createQuery(SELECT_ALL_GIFT_CERTIFICATES).getResultList());
     }
 
     @Override
     public Optional<GiftCertificate> findOne(Long id) {
-        return jdbcTemplate.query(SELECT_ONE_GIFT_CERTIFICATE, giftCertificateRowMapper, id).
-                stream().findAny();
+        return Optional.ofNullable(entityManager.find(GiftCertificate.class, id));
     }
 
     @Override
-    public Optional<GiftCertificate> findByName(String name) {
-        return jdbcTemplate.query(SELECT_ONE_GIFT_CERTIFICATE_BY_NAME, giftCertificateRowMapper, name).
-                stream().findAny();
-    }
-
-    @Override
-    public GiftCertificate add(GiftCertificate obj) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection
-                    .prepareStatement(ADD_GIFT_CERTIFICATE, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, obj.getName());
-            ps.setString(2, obj.getDescription());
-            ps.setBigDecimal(3, obj.getPrice());
-            ps.setInt(4, obj.getDuration());
-            ps.setTimestamp(5, valueOf(now()));
-            ps.setTimestamp(6, valueOf(now()));
-            return ps;
-        }, keyHolder);
-        return findOne(keyHolder.getKey().longValue()).get();
+    public GiftCertificate add(GiftCertificate certificate) {
+        certificate.getTags()
+                .forEach(t -> t.setId(findTagIdByNameIfExist(t.getName())));
+        return entityManager.merge(certificate);
     }
 
     @Override
@@ -87,30 +80,33 @@ public class GiftCertificateDaoImpl implements GiftCertificateDao {
     }
 
     @Override
-    public GiftCertificate update(GiftCertificate obj, Long id) {
-        jdbcTemplate.update(UPDATE_GIFT_CERTIFICATE, obj.getName(), obj.getDescription(), obj.getPrice(),
-                obj.getDuration(), valueOf(now()), id);
-        return findOne(id).get();
+    public GiftCertificate update(GiftCertificate certificate) {
+        certificate.getTags()
+                .forEach(t -> t.setId(findTagIdByNameIfExist(t.getName())));
+        return entityManager.merge(certificate);
     }
 
     @Override
     public void delete(Long id) {
-        jdbcTemplate.update(DELETE_GIFT_CERTIFICATE, id);
+        GiftCertificate giftCertificate = findOne(id).get();
+        entityManager.remove(giftCertificate);
     }
 
     @Override
     public Set<Tag> getTags(Long giftCertificateId) {
         return new HashSet<>(jdbcTemplate.query(SELECT_TAGS, tagRowMapper, giftCertificateId));
-
     }
 
     @Override
-    public void clearTags(Long giftCertificateId) {
-        jdbcTemplate.update(CLEAR_GIFT_CERTIFICATE_TAGS, giftCertificateId);
+    public void detach(GiftCertificate giftCertificate) {
+        entityManager.detach(giftCertificate);
     }
 
-    @Override
-    public void addTag(Long tagId, Long giftCertificateId) {
-        jdbcTemplate.update(ADD_TAG_TO_GIFT_CERTIFICATE, tagId, giftCertificateId);
+
+    private Long findTagIdByNameIfExist(String name) {
+        List tags = entityManager.createQuery(SELECT_ONE_TAG_BY_NAME)
+                .setParameter(NAME, name)
+                .getResultList();
+        return tags.isEmpty() ? null : ((Tag) tags.get(0)).getId();
     }
 }
