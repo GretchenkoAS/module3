@@ -1,56 +1,44 @@
 package com.epam.esm.service.impl;
 
 import com.epam.esm.dao.GiftCertificateDao;
+import com.epam.esm.dao.TagDao;
 import com.epam.esm.dto.GiftCertificateDto;
-import com.epam.esm.dto.QueryDto;
 import com.epam.esm.dto.TagDto;
 import com.epam.esm.entity.GiftCertificate;
 import com.epam.esm.entity.Tag;
 import com.epam.esm.exeption.AppException;
 import com.epam.esm.exeption.ErrorCode;
 import com.epam.esm.mapper.impl.GiftCertificateMapper;
-import com.epam.esm.mapper.impl.QueryMapper;
-import com.epam.esm.mapper.impl.TagMapper;
 import com.epam.esm.service.GiftCertificateService;
-import com.epam.esm.service.TagService;
 import com.epam.esm.validator.GiftCertificateValidator;
-import com.epam.esm.validator.QueryValidator;
 import com.epam.esm.validator.TagValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class GiftCertificateServiceImpl implements GiftCertificateService {
     private static final String ID = "id";
     private final GiftCertificateDao giftCertificateDao;
-    private final TagService tagService;
     private final GiftCertificateMapper mapper;
-    private final TagMapper tagMapper;
-    private final QueryMapper queryMapper;
     private final GiftCertificateValidator giftCertificateValidator;
     private final TagValidator tagValidator;
-    private final QueryValidator queryValidator;
+    private final TagDao tagDao;
 
     @Autowired
-    public GiftCertificateServiceImpl(GiftCertificateDao giftCertificateDao, TagService tagService,
-                                      GiftCertificateMapper mapper, TagMapper tagMapper, QueryMapper queryMapper,
+    public GiftCertificateServiceImpl(GiftCertificateDao giftCertificateDao, GiftCertificateMapper mapper,
                                       GiftCertificateValidator giftCertificateValidator,
-                                      TagValidator tagValidator, QueryValidator queryValidator) {
+                                      TagValidator tagValidator, TagDao tagDao) {
         this.giftCertificateDao = giftCertificateDao;
-        this.tagService = tagService;
         this.mapper = mapper;
-        this.tagMapper = tagMapper;
-        this.queryMapper = queryMapper;
         this.giftCertificateValidator = giftCertificateValidator;
         this.tagValidator = tagValidator;
-        this.queryValidator = queryValidator;
+        this.tagDao = tagDao;
     }
 
     @Transactional
@@ -75,8 +63,8 @@ public class GiftCertificateServiceImpl implements GiftCertificateService {
 
     @Transactional
     @Override
-    public List<GiftCertificateDto> findAll() {
-        List<GiftCertificate> giftCertificates = giftCertificateDao.findAll();
+    public List<GiftCertificateDto> findAll(int page, int size) {
+        List<GiftCertificate> giftCertificates = giftCertificateDao.findAll(page, size);
         return mapper.mapToListDto(giftCertificates);
     }
 
@@ -132,28 +120,17 @@ public class GiftCertificateServiceImpl implements GiftCertificateService {
 
     @Transactional
     @Override
-    public List<GiftCertificateDto> findByQuery(QueryDto queryDto) {
-        queryValidator.validate(queryDto);
-        List<GiftCertificate> giftCertificates = giftCertificateDao.findByQuery(queryMapper.mapToEntity(queryDto));
-        giftCertificates = giftCertificates.stream()
-                .distinct().collect(Collectors.toList());
-        for (GiftCertificate giftCertificate : giftCertificates) {
-            Set<Tag> tags = giftCertificateDao.getTags(giftCertificate.getId());
-            giftCertificate.setTags(tags);
+    public List<GiftCertificateDto> findByTagNames(String[] names, int page, int size) {
+        List<Tag> tags = new ArrayList<>();
+        for (String name : names) {
+            Optional<Tag> tagOptional = tagDao.findByName(name);
+            if (tagOptional.isPresent()) {
+                tags.add(tagOptional.get());
+            } else {
+                return Collections.emptyList();
+            }
         }
+        List<GiftCertificate> giftCertificates = giftCertificateDao.findByTags(tags, page, size);
         return mapper.mapToListDto(giftCertificates);
     }
-
-    @Transactional
-    @Override
-    public GiftCertificateDto update(GiftCertificateDto giftCertificateDto, Long id) {
-        if (!exist(giftCertificateDto, id)) {
-            throw new AppException(ErrorCode.GIFT_CERTIFICATE_NOT_FOUND, ID, id);
-        }
-        giftCertificateValidator.validate(giftCertificateDto);
-        giftCertificateDto.setId(id);
-        GiftCertificate giftCertificateInDb = giftCertificateDao.update(mapper.mapToEntity(giftCertificateDto));
-        return mapper.mapToDto(giftCertificateInDb);
-    }
-
 }

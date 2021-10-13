@@ -37,7 +37,7 @@ public interface TagService {
      *
      * @return List of TagDto in repository
      */
-    List<TagDto> findAll();
+    List<TagDto> findAll(int page, int size);
 
     /**
      * Returns TagDto object for tag with provided name from repository.
@@ -55,12 +55,5 @@ public interface TagService {
      */
     void delete(Long id);
 
-    /**
-     * Checks if tag that corresponds to provided TagDto exists in repository.
-     *
-     * @param tagDto TagDto object of tag to find
-     * @return true if tag that corresponds to provided TagDto object exists in repository,
-     * otherwise returns false
-     */
-    boolean exist(TagDto tagDto);
+    TagDto findMostWidelyUsedTag();
 }

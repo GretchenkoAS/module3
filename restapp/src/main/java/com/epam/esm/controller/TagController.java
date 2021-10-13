@@ -1,18 +1,21 @@
 package com.epam.esm.controller;
 
 import com.epam.esm.dto.TagDto;
-import com.epam.esm.exeption.AppException;
 import com.epam.esm.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import java.util.List;
 
@@ -32,50 +35,51 @@ public class TagController {
         this.tagService = tagService;
     }
 
-    /**
-     * Returns all TagDto objects of tags from repository.
-     *
-     * @return list of TagDto objects of retrieved tags
-     */
     @GetMapping
-    public List<TagDto> findAll() {
-        return tagService.findAll();
+    public ResponseEntity<List<TagDto>> findAll(@RequestParam(required = false, defaultValue = "1") int page,
+                                                @RequestParam(required = false, defaultValue = "5") int size) {
+        List<TagDto> tags = tagService.findAll(page, size);
+        for (TagDto tag : tags) {
+            addLinks(tag);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(tags);
     }
 
-    /**
-     * Returns TagDto object for tag with provided id from repository.
-     *
-     * @param id id of tag to find
-     * @return TagDto object of tag with provided id in repository
-     * @throws AppException if tag with provided id is not present in repository
-     */
     @GetMapping("/{id}")
-    public TagDto find(@PathVariable Long id) {
-        return tagService.find(id);
+    public ResponseEntity<TagDto> find(@PathVariable Long id) {
+        TagDto tag = tagService.find(id);
+        addLinks(tag);
+        return ResponseEntity.status(HttpStatus.OK).body(tag);
     }
 
-    /**
-     * Adds tag to repository according to request body.
-     *
-     * @param newTag TagDto object on basis of which is created new tag in repository
-     * @return TagDto tag dto of created in repository tag
-     * @throws AppException if fields in provided TagDto object is not valid or tag with the same name is alredy
-     *                          in repository
-     */
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public TagDto add(@RequestBody TagDto newTag) {
-        return tagService.add(newTag);
+    public ResponseEntity<TagDto> add(@RequestBody TagDto newTag) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(tagService.add(newTag));
     }
 
-    /**
-     * Removes tag with provided id from repository.
-     *
-     * @param id id of tag to delete from repository
-     */
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable Long id) {
         tagService.delete(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+    }
+
+    @GetMapping("/name")
+    public ResponseEntity<TagDto> findByName(@RequestParam(required = false) String name) {
+        TagDto tag = tagService.findByName(name);
+        addLinks(tag);
+        return ResponseEntity.status(HttpStatus.OK).body(tag);
+    }
+
+    @GetMapping("/most-widely-used-tag")
+    public ResponseEntity<TagDto> findMostWidelyUsedTag() {
+        TagDto tag = tagService.findMostWidelyUsedTag();
+        addLinks(tag);
+        return ResponseEntity.status(HttpStatus.OK).body(tag);
+    }
+
+    private void addLinks(TagDto tag) {
+        tag.add(linkTo(methodOn(TagController.class).find(tag.getId())).withSelfRel());
+        tag.add(linkTo(methodOn(TagController.class).add(new TagDto())).withRel("create"));
+        tag.add(linkTo(methodOn(TagController.class).delete(tag.getId())).withRel("delete"));
     }
 }

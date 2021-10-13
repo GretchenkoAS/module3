@@ -27,6 +27,9 @@ public enum ErrorCode {
     METHOD_ARGUMENT_TYPE_MISMATCH("G3", HttpStatus.BAD_REQUEST),
     INTERNAL_ERROR("G4", HttpStatus.INTERNAL_SERVER_ERROR),
     MEDIA_TYPE_NOT_SUPPORTED("G6", HttpStatus.BAD_REQUEST),
+    USER_NOT_FOUND("U1", HttpStatus.NOT_FOUND),
+    ORDER_NOT_FOUND("O1", HttpStatus.NOT_FOUND),
+    ORDER_NO_CONTENT("O1", HttpStatus.NO_CONTENT),
     URL_INVALID("G5", HttpStatus.NOT_FOUND);
 
     private String code;

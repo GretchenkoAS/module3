@@ -11,6 +11,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Table(name = "orders")
 @Entity
@@ -77,5 +78,27 @@ public class Order {
 
     public void setPurchaseDate(LocalDateTime purchaseDate) {
         this.purchaseDate = purchaseDate;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Order order = (Order) o;
+        return Objects.equals(id, order.id) && Objects.equals(cost, order.cost) && Objects.equals(purchaseDate, order.purchaseDate);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, cost, purchaseDate);
+    }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "id=" + id +
+                ", cost=" + cost +
+                ", purchaseDate=" + purchaseDate +
+                '}';
     }
 }

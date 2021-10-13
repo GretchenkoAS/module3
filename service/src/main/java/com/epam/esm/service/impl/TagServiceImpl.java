@@ -42,8 +42,8 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    public List<TagDto> findAll() {
-        Set<Tag> tags = tagDao.findAll();
+    public List<TagDto> findAll(int page, int size) {
+        Set<Tag> tags = tagDao.findAll(page, size);
         return tags.stream()
                 .map(mapper::mapToDto)
                 .collect(Collectors.toList());
@@ -62,12 +62,6 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    public boolean exist(TagDto tagDto) {
-        Tag tag = mapper.mapToEntity(tagDto);
-        return tagDao.findByName(tag.getName()).isPresent();
-    }
-
-    @Override
     public void delete(Long id) {
         if (tagDao.findOne(id).isEmpty()) {
             throw new AppException(ErrorCode.TAG_NO_CONTENT, ID, id);
@@ -82,5 +76,10 @@ public class TagServiceImpl implements TagService {
             throw new AppException(ErrorCode.TAG_NOT_FOUND, NAME, name);
         }
         return tagOptional.map(mapper::mapToDto).get();
+    }
+
+    @Override
+    public TagDto findMostWidelyUsedTag() {
+        return mapper.mapToDto(tagDao.findMostWidelyUsedTag());
     }
 }

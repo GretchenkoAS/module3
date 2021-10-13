@@ -1,10 +1,10 @@
 package com.epam.esm.service;
 
 import com.epam.esm.dto.GiftCertificateDto;
-import com.epam.esm.dto.QueryDto;
 import com.epam.esm.exeption.AppException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service class responsible for processing gift certificate-related operations
@@ -36,7 +36,7 @@ public interface GiftCertificateService {
      *
      * @return List of GiftCertificateDto in repository
      */
-    List<GiftCertificateDto> findAll();
+    List<GiftCertificateDto> findAll(int page, int size);
 
     /**
      * Removes gift certificate with provided id from repository.
@@ -44,17 +44,6 @@ public interface GiftCertificateService {
      * @param id id of gift certificate to remove
      */
     void delete(Long id);
-
-    /**
-     * Updates gift certificate to repository according to provided dto object.
-     *
-     * @param id id of gift certificate to update
-     * @param giftCertificateDto GiftCertificateDto object on basis of which is update giftCertificate in repository
-     * @return GiftCertificateDto giftCertificateDto of updated in gift certificate repository
-     * @throws AppException if fields in provided GiftCertificateDto object is not valid or giftCertificate is not present
-     *                         in repository
-     */
-    GiftCertificateDto update(GiftCertificateDto giftCertificateDto, Long id);
 
     /**
      * Updates gift certificate fields according to provided dto object.
@@ -77,12 +66,5 @@ public interface GiftCertificateService {
      */
     boolean exist(GiftCertificateDto giftCertificateDto, Long id);
 
-    /**
-     * Retrieves gift certificates from repository according to provided query.
-     *
-     * @param queryDto QueryDto object for building search query
-     * @throws AppException if QueryDto fields is not valid
-     * @return List<GiftCertificates> list of gift certificates from repository according to provided query
-     */
-    List<GiftCertificateDto> findByQuery(QueryDto queryDto);
+    List<GiftCertificateDto> findByTagNames(String[] names, int page, int size);
 }

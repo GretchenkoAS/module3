@@ -16,7 +16,7 @@ public interface TagDao {
      *
      * @return List of Tags in repository
      */
-    Set<Tag> findAll();
+    Set<Tag> findAll(int page, int size);
 
     /**
      * Returns Optional of Tag with provided id from repository.
@@ -48,4 +48,6 @@ public interface TagDao {
      * @param id id of Tag to remove
      */
     void delete(Long id);
+
+    Tag findMostWidelyUsedTag();
 }
